@@ -8,6 +8,8 @@ packages = [{include = "eurocar_telegram_bot"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+load-dotenv = "^0.1.0"
+aiogram = {url = "https://github.com/aiogram/aiogram/archive/refs/heads/dev-3.x.zip"}
 
 
 [build-system]
