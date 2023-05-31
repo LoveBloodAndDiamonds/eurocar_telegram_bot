@@ -1,5 +1,7 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
 
+from bot.models import KeyNames
+
 
 def get_faq_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
@@ -14,5 +16,5 @@ def get_faq_keyboard() -> InlineKeyboardMarkup:
 
 def get_back_key() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text='◀️ Назад', callback_data='faq_back')
+    builder.button(text=KeyNames.BACK_KEY, callback_data='faq_back')
     return builder.as_markup(resize_keyboard=True)

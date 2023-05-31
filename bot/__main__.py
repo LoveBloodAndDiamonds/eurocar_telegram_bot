@@ -3,6 +3,7 @@ import logging
 import os
 
 from aiogram import Dispatcher, Bot
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
@@ -12,16 +13,21 @@ from handlers import register_user_handlers
 load_dotenv()
 
 
-async def main() -> None:
-    logging.basicConfig(level=logging.DEBUG)
-
-    dp = Dispatcher()
-    bot = Bot(token=os.getenv('BOT_TOKEN'), parse_mode='HTML')
-
+async def set_up_commands(bot: Bot) -> None:
+    """Set up commands what user will see."""
     commands_for_bot = []
     for cmd in bot_commands:
         commands_for_bot.append(BotCommand(command=cmd[0], description=cmd[1]))
     await bot.set_my_commands(commands=commands_for_bot)
+
+
+async def main() -> None:
+    logging.basicConfig(level=logging.DEBUG)
+
+    dp = Dispatcher(storage=MemoryStorage())
+    bot = Bot(token=os.getenv('BOT_TOKEN'), parse_mode='HTML')
+
+    await set_up_commands(bot)
 
     register_user_commands(dp)
     register_user_handlers(dp)
