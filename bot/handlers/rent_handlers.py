@@ -1,25 +1,45 @@
+import logging
+
 from aiogram import types
+from aiogram.fsm.context import FSMContext
 
-from bot.keyboards import get_rent_regions_keyboard
-from bot.models import CarClassification, RentCallback
+from bot.keyboards import get_rent_regions_keyboard, get_rent_car_classification_keyboard
+from bot.models import CarClassification, RentCallback, KeyNames, RentCallbackNames
+from bot.states import RentAutoState
 
 
-async def rent_message_handler(message: types.Message) -> types.Message:
+async def rent_message_handler(message: types.Message, state: FSMContext) -> types.Message:
     """Handle FAQ message."""
-    # text_with_classification = str()
-    # for classification in CarClassification.__members__.values():
-    #     text_with_classification += f'{classification.value[2]} ' \
-    #                                 f'<b>{classification.value[0]}</b>: ' \
-    #                                 f'{classification.value[1]}\n\n'
-
-    return await message.answer('Я задам Вам несколько вопросов, которые помогут подобрать Вам автомобиль.\n\n'
+    await state.set_state(RentAutoState.REGION)
+    return await message.answer('Я задам несколько вопросов, которые помогут подобрать автомобиль для Вас.\n\n'
                                 '<b>Выберите Ваш регион:</b>',
                                 reply_markup=get_rent_regions_keyboard())
 
 
-async def rent_callback_handler(callback_query: types.CallbackQuery, callback_data: RentCallback) -> types.Message:
+async def rent_callback_handler(callback_query: types.CallbackQuery, callback_data: RentCallback,
+                                state: FSMContext) -> bool or types.Message:
     """Handle faq keyboard callbacks."""
-    print(callback_data)
-    print(callback_data.current_answer)
-    print(callback_data.answer_data)
-    return await callback_query.message.answer(callback_data.answer_data)
+    if callback_data.answer_data == "cancel":  # Если пользователь нажал кнопку "Отмена"
+        await state.clear()  # Очищаем состояние пользователя
+        return await callback_query.message.delete()
+
+    elif callback_data.current_answer == RentCallbackNames.REGION:  # Выбор региона
+        await state.update_data(REGION=callback_data.answer_data)
+        await state.set_state(RentAutoState.CAR_CLASS)
+        state_data = await state.get_data()
+        return callback_query.message.edit_text(f"Отлично, Ваш регион {state_data}, теперь выберите тип авто:",
+                                                reply_markup=get_rent_car_classification_keyboard())
+
+    elif callback_data.current_answer == RentCallbackNames.CAR_CLASS:  # Выбор класса авто
+        data: CarClassification.value = eval(f"{callback_data.answer_data}.value")  # Возможно, это колхозинг, но мне
+        # показалось, что это достаточно удобный способ для получения классификации машин, которые входят
+        # в классы вроде "Эконом", "Комфорт" и пр.
+        print(data)
+        await state.update_data(CAR_CLASS=callback_data)
+        await state.set_state(RentAutoState.CAR_MODEL)
+        state_data = await state.get_data()
+        return callback_query.message.edit_text(f"Отлично, Вы выбрали класс авто {state_data}, теперь выберите модель"
+                                                f"авто")
+
+    return await callback_query.message.edit_text(f"Выберите Ваш регион или нажмите {KeyNames.CANCEL_KEY}",
+                                                  reply_markup=get_rent_regions_keyboard())

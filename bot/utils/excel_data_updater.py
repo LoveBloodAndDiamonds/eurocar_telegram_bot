@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -12,7 +13,7 @@ load_dotenv()
 
 class ExcelDataUpdater:
     def __init__(self):
-        self.json_file = '../credentials/creds.json'  # Путь к вашему файлу json с данными аутентификации
+        self.json_file = '../sheets_google_credentials.json'  # Путь к вашему файлу json с данными аутентификации
         self.file_id = os.getenv('GOOGLE_SHEETS_ID')  # Указываем айди документа на sheets.google.com
         self.scope = ['https://spreadsheets.google.com/feeds',  # Устанавливаем права доступа
                       'https://www.googleapis.com/auth/drive']
@@ -56,29 +57,33 @@ class ExcelDataUpdater:
         """
         sorted_data = {}
         for region in regions_data:  # Проходимся циклом по каждому региону
-            region_sorted_data = {}
-            region_data = regions_data[region]
-            first_values = [value[0] for value in region_data]  # Получаем первый столбик в каждой строчке, чтобы
-            # в дальнейшем искать по ним теги <> и </> которыми я разделил таблицу на подтаблицы
+            try:
+                region_sorted_data = {}
+                region_data = regions_data[region]
+                first_values = [value[0] for value in region_data]  # Получаем первый столбик в каждой строчке, чтобы
+                # в дальнейшем искать по ним теги <> и </> которыми я разделил таблицу на подтаблицы
 
-            find_values = [  # Список кортежей для сортировки информации.
-                ("tarriff_limit", "<tariff_limit>", "</tariff_limit>"),
-                ("tariff_unlimit", "<tariff_unlimit>", "</tariff_unlimit>"),
-                ("available_cars", "<available_cars>", "</available_cars>"),
-            ]
+                find_values = [  # Список кортежей для сортировки информации.
+                    ("tarriff_limit", "<tariff_limit>", "</tariff_limit>"),
+                    ("tariff_unlimit", "<tariff_unlimit>", "</tariff_unlimit>"),
+                    ("available_cars", "<available_cars>", "</available_cars>"),
+                ]
 
-            for values in find_values:
-                start = first_values.index(values[1])  # Находим открывающий тег
-                end = first_values.index(values[2])  # Находим закрывающий тег
-                region_sorted_data[values[0]] = pd.DataFrame(region_data[start+2:end],  # Создаем DataFrame на отрезке
-                                                             columns=[name for name in region_data[start+1:end][0]])
+                for values in find_values:
+                    start = first_values.index(values[1])  # Находим открывающий тег
+                    end = first_values.index(values[2])  # Находим закрывающий тег
+                    # Создаем DataFrame на отрезке от открывающего тега до закрывающего
+                    region_sorted_data[values[0]] = pd.DataFrame(region_data[start+2:end],
+                                                                 columns=[name for name in region_data[start+1:end][0]])
 
-            sorted_data[region] = region_sorted_data  # Добавляем данные в общий словарь
+                sorted_data[region] = region_sorted_data  # Добавляем данные в общий словарь
+
+            except Exception as error:
+                logging.error(f"Ошибка при добавлении региона {region}: {error}")
 
         self.excel_data = sorted_data
-        print(sorted_data)
 
-    def start_update(self, refresh_time: int or float = 60) -> None:
+    def start_update(self, refresh_time: int or float = 600) -> None:
         """
         Updates table every {refresh_time} seconds.
         :param refresh_time: int or float, data refresh rate
@@ -89,6 +94,11 @@ class ExcelDataUpdater:
             self.__process_data(regions_data)
             time.sleep(refresh_time)
 
+    def get_available_regions(self) -> list:
+        """
+        :return: List of available regions
+        """
+        return [region for region in self.excel_data]
 
-if __name__ == '__main__':
-    ExcelDataUpdater().start_update()
+
+excel_data_updater_obj = ExcelDataUpdater()

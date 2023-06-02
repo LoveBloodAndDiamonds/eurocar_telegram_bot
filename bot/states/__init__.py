@@ -1,3 +1,3 @@
 __all__ = ["RentAutoState"]
 
-from RentAutoState import RentAutoState
+from bot.states.RentAutoState import RentAutoState

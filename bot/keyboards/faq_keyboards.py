@@ -1,4 +1,4 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup
 
 from bot.models import KeyNames, FaqCallback
 
@@ -28,4 +28,4 @@ def get_faq_keyboard() -> InlineKeyboardMarkup:
 def get_back_key() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=KeyNames.BACK_KEY, callback_data=FaqCallback(answer='back'))
-    return builder.as_markup(resize_keyboard=True)
+    return construct(builder)
