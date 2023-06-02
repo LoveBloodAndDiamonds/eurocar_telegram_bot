@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from commands import register_user_commands, bot_commands
 from handlers import register_user_handlers
+from utils import data_updater_th
 
 load_dotenv()
 
@@ -23,6 +24,9 @@ async def set_up_commands(bot: Bot) -> None:
 
 async def main() -> None:
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('Hello')
+
+    data_updater_th.start()  # Start to update data from excel table
 
     dp = Dispatcher(storage=MemoryStorage())
     bot = Bot(token=os.getenv('BOT_TOKEN'), parse_mode='HTML')

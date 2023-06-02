@@ -13,6 +13,8 @@ aiogram = {url = "https://github.com/aiogram/aiogram/archive/refs/heads/dev-3.x.
 gspread = "^5.9.0"
 pandas = "^2.0.2"
 openpyxl = "^3.1.2"
+google-api-python-client = "^2.88.0"
+oauth2client = "^4.1.3"
 
 
 [build-system]
