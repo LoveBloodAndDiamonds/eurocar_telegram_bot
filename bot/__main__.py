@@ -3,10 +3,11 @@ import logging
 import os
 
 from aiogram import Dispatcher, Bot
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
+from redis_instance import redis
 from commands import register_user_commands, bot_commands
 from handlers import register_user_handlers
 from utils import data_updater_th
@@ -28,7 +29,7 @@ async def main() -> None:
 
     data_updater_th.start()  # Start to update data from excel table
 
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher(storage=RedisStorage(redis=redis))
     bot = Bot(token=os.getenv('BOT_TOKEN'), parse_mode='HTML')
 
     await set_up_commands(bot)

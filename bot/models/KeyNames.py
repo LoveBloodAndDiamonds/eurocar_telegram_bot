@@ -4,3 +4,4 @@ class KeyNames:
     BACK_KEY = '◀️ Назад'
     CANCEL_KEY = '❌ Отмена'
     CLOSE_KEY = '❌ Закрыть'
+    ACCEPT_KEY = '☑️ Подтвердить'

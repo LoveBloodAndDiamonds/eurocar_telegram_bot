@@ -3,3 +3,4 @@ class RentCallbackNames:
     TARIFF: str = "tar"
     CAR_CLASS: str = "cla"
     CAR_MODEL: str = "mod"
+    FINISH: str = 'finish'

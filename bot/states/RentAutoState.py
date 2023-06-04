@@ -9,4 +9,6 @@ class RentAutoState(StatesGroup):
     TARIFF = State()
     CAR_CLASS = State()
     CAR_MODEL = State()
+    CONFIRM_ORDER = State()
+    PHONE_NUMBER = State()
     # CAR_PARK = State()  # Вернуть, когда будет необходимость подключать аффилированные бренды
