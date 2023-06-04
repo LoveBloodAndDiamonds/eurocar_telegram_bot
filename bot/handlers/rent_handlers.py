@@ -8,9 +8,11 @@ from bot.keyboards import (
     get_rent_car_classification_keyboard,
     get_car_models_keyboard,
     get_rent_tariffs_keyboard,
-    get_accept_keyboard
+    get_accept_keyboard,
+    get_phone_number_button
 )
 from bot.models import CarClassification, RentCallback
+from bot.redis_instance import redis
 from bot.states import RentAutoState
 from bot.utils import excel_data_updater_obj
 
@@ -158,6 +160,11 @@ async def confirm_order(callback_query: types.CallbackQuery, callback_data: Rent
     await state.update_data(CONFIRM_ORDER=rent_price)
     await state.set_state(RentAutoState.PHONE_NUMBER)
     state_data = await state.get_data()
+    phone_number = await redis.get(f'{callback_query.from_user.id}')
+    phone_number = phone_number.decode('utf-8').strip()
+    reply_markup = get_phone_number_button(str(phone_number)) if phone_number else None  # Добавляем клавиатуру с
+    # прошлым указанным номером, только если он есть
+
     return await callback_query.message.edit_text(text=f"Ваш регион: {state_data['REGION']}\n"
                                                        f"Выбранный тариф: {state_data['TARIFF']}\n"
                                                        f"Класс авто: {state_data['CAR_CLASS'][1]}\n"
@@ -167,7 +174,8 @@ async def confirm_order(callback_query: types.CallbackQuery, callback_data: Rent
                                                        f"✅<b> Вы подтвердили заказ</b>\n"
                                                        f"В следующем сообщении <b>введите номер телефона</b> в формате "
                                                        f"<b>+7</b>, на который Вам перезвонит менеджер, для "
-                                                       f"уточнения дальнейших инструкций: ")
+                                                       f"уточнения дальнейших инструкций: ",
+                                                  reply_markup=reply_markup)
 
 
 async def handle_phone_number(message: types.Message, state: FSMContext):
@@ -175,11 +183,34 @@ async def handle_phone_number(message: types.Message, state: FSMContext):
     phone_nubmer = message.text
     phone_regex = re.compile(r'^\+7\d{10}$')
     if phone_regex.match(phone_nubmer):
+        await redis.set(message.from_user.id, phone_nubmer)
         await state.update_data(PHONE_NUMBER=phone_nubmer)
         state_data = await state.get_data()
         await state.clear()
-        await message.answer(f"TEST: {state_data}")
+        print(state_data)  # todo send mail
         return await message.answer(f'Ваш номер телефона <code>{phone_nubmer}</code>, менеджер свяжется с Вами в '
                                     f'ближайшее время.')
     else:
         return await message.answer(f'Вы ввели неправильный номер телефона, попробуйте еще раз:')
+
+
+async def handle_phone_number_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    """Ловим сообщение с номером телефона от юзера."""
+    phone_nubmer = callback_query.data
+    phone_regex = re.compile(r'^\+7\d{10}$')
+    if phone_regex.match(phone_nubmer):
+        await state.update_data(PHONE_NUMBER=phone_nubmer)
+        state_data = await state.get_data()
+        await state.clear()
+        print(state_data)  # todo send mail
+        await callback_query.message.edit_text(text=f"Ваш регион: {state_data['REGION']}\n"
+                                                    f"Выбранный тариф: {state_data['TARIFF']}\n"
+                                                    f"Класс авто: {state_data['CAR_CLASS'][1]}\n"
+                                                    f"Модель авто: {state_data['CAR_MODEL'][0]}\n"
+                                                    f"Тип коробки передач: {state_data['CAR_MODEL'][2]}\n"
+                                                    f"Стоимость аренды: <b>{state_data['CONFIRM_ORDER']}</b> руб.\n\n"
+                                                    f"✅<b> Вы подтвердили заказ</b>\n")
+        return await callback_query.message.answer(f'Ваш номер телефона <code>{phone_nubmer}</code>,'
+                                                   f' менеджер свяжется с Вами в ближайшее время.')
+    else:
+        return await callback_query.message.answer(f'Вы ввели неправильный номер телефона, попробуйте еще раз:')

@@ -90,3 +90,9 @@ def get_accept_keyboard() -> InlineKeyboardMarkup:
     builder.button(text=KeyNames.CLOSE_KEY,  # Add cancel key
                    callback_data=RentCallback(current_answer='None', answer_data='cancel'))
     return builder.as_markup()
+
+
+def get_phone_number_button(phone_number: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=f"Использовать {phone_number}", callback_data=phone_number)
+    return builder.as_markup()
