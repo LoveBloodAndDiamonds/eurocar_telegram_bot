@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup
 from bot.models import KeyNames, FaqCallback
 
 
-def construct(builder: InlineKeyboardBuilder, adjust: int or bool = 1, resize_keyboard: bool = True)\
+def construct(builder: InlineKeyboardBuilder, adjust: int or bool = 1, resize_keyboard: bool = True) \
         -> InlineKeyboardMarkup:
     """Remove some lines by this func."""
     if adjust:

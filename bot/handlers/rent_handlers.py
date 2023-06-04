@@ -43,8 +43,8 @@ async def rent_callback_tariff(callback_query: types.CallbackQuery, callback_dat
     if callback_data.answer_data == "back":  # Возвращаем пользователя на выбор региона
         await state.set_state(RentAutoState.REGION)
         return await callback_query.message.edit_text('Я задам несколько вопросов, которые помогут подобрать автомобиль'
-                                                   ' для Вас.\n\n<b>Выберите Ваш регион:</b>',
-                                                   reply_markup=get_rent_regions_keyboard())
+                                                      ' для Вас.\n\n<b>Выберите Ваш регион:</b>',
+                                                      reply_markup=get_rent_regions_keyboard())
 
     await state.update_data(TARIFF=callback_data.answer_data)
     await state.set_state(RentAutoState.CAR_CLASS)

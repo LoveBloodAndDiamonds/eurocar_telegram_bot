@@ -1,6 +1,4 @@
-import logging
-
-from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup
 
 from bot.models import KeyNames, RentCallback, RentCallbackNames, CarClassification
 from bot.utils import excel_data_updater_obj
@@ -39,7 +37,7 @@ def get_rent_car_classification_keyboard(region: str, tariff: str) -> InlineKeyb
         )) for car_class in values[0]]
         builder.button(text=str(values[3]) + " " + str(values[1]) + f" ({min(prices)} - {max(prices)})",
                        callback_data=RentCallback(current_answer=RentCallbackNames.CAR_CLASS,
-                       answer_data=str(classification)))
+                                                  answer_data=str(classification)))
     return construct(builder)
 
 
@@ -49,7 +47,7 @@ def get_rent_tariffs_keyboard(region: str) -> InlineKeyboardMarkup:
     for tariff in available_tariffs:
         builder.button(text=str(tariff),
                        callback_data=RentCallback(current_answer=RentCallbackNames.TARIFF,
-                       answer_data=str(tariff)))
+                                                  answer_data=str(tariff)))
     return construct(builder)
 
 
