@@ -1,4 +1,5 @@
 class RentCallbackNames:
-    REGION: str = "region"
-    CAR_CLASS: str = "car_class"
-    CAR_MODEL: str = "car_model"
+    REGION: str = "reg"
+    TARIFF: str = "tar"
+    CAR_CLASS: str = "cla"
+    CAR_MODEL: str = "mod"

@@ -18,6 +18,7 @@ def get_faq_keyboard() -> InlineKeyboardMarkup:
         ('Какие документы нужны для аренды?', FaqCallback(answer='documents')),
         ('Могут ли мне отказать в аренде?', FaqCallback(answer='rent_decline')),
         ('Как работает страховка?', FaqCallback(answer='insurance')),
+        (KeyNames.CLOSE_KEY, FaqCallback(answer='close'),)
     ]
     for btn in btns:
         builder.button(text=btn[0], callback_data=btn[1])

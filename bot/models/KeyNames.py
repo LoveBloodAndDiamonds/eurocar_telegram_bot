@@ -3,3 +3,4 @@ class KeyNames:
     FAQ_KEY = 'FAQ ❔'
     BACK_KEY = '◀️ Назад'
     CANCEL_KEY = '❌ Отмена'
+    CLOSE_KEY = '❌ Закрыть'

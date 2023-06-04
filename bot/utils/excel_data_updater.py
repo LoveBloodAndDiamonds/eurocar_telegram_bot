@@ -2,10 +2,9 @@ import logging
 import os
 import time
 
-from dotenv import load_dotenv
-import pandas as pd
-
 import gspread
+import pandas as pd
+from dotenv import load_dotenv
 from oauth2client.service_account import ServiceAccountCredentials
 
 load_dotenv()
@@ -14,6 +13,7 @@ load_dotenv()
 class ExcelDataUpdater:
     def __init__(self):
         self.json_file = '../sheets_google_credentials.json'  # Путь к вашему файлу json с данными аутентификации
+        # self.json_file = "sheets_google_credentials.json"
         self.file_id = os.getenv('GOOGLE_SHEETS_ID')  # Указываем айди документа на sheets.google.com
         self.scope = ['https://spreadsheets.google.com/feeds',  # Устанавливаем права доступа
                       'https://www.googleapis.com/auth/drive']
@@ -73,8 +73,9 @@ class ExcelDataUpdater:
                     start = first_values.index(values[1])  # Находим открывающий тег
                     end = first_values.index(values[2])  # Находим закрывающий тег
                     # Создаем DataFrame на отрезке от открывающего тега до закрывающего
-                    region_sorted_data[values[0]] = pd.DataFrame(region_data[start+2:end],
-                                                                 columns=[name for name in region_data[start+1:end][0]])
+                    region_sorted_data[values[0]] = pd.DataFrame(region_data[start + 2:end],
+                                                                 columns=[name for name in
+                                                                          region_data[start + 1:end][0]])
 
                 sorted_data[region] = region_sorted_data  # Добавляем данные в общий словарь
 
@@ -94,11 +95,80 @@ class ExcelDataUpdater:
             self.__process_data(regions_data)
             time.sleep(refresh_time)
 
+    def get_available_models(self, region: str, car_class: list, affiliated_brand: str = "Европкар"):
+        """
+        Функция, которая возвращает список доступных машин для выбранного региона.
+        :param region: Выбранный пользователем регион, совпадает с названием гугл таблицы.
+        :param car_class:  Список искомых классов авто, например ["EXMR", "PDAR", "FDAR"]
+        :param affiliated_brand: Название аффилированного бренда
+        :return: Список доступных машин для выбранного региона и класса авто. El: (car_model, spec, transmission,)
+        """
+        region_available_cars: pd.DataFrame = self.excel_data[region]['available_cars']
+
+        # Выбор строки с нужным аффилированным брендом
+        result = region_available_cars.loc[region_available_cars['Аffiliated brand'] == affiliated_brand]
+
+        cars_list = []
+        for spec in car_class:
+            if spec[2] == "M":
+                transmission = "MT"
+            elif spec[2] == "A":
+                transmission = "AT"
+
+            table_cell = result.loc[0, spec]
+            cars = table_cell.split(',')
+            for car in cars:
+                car_model = car.strip()
+                if car_model != 'n/a':
+                    cars_list.append((car_model, spec, transmission,))  # Очищаем строчку от пробелов, добавляем
+                # информацию о категории авто и трансмиссии
+
+        return cars_list
+
+    def get_available_tariffs(self, region: str, tariff_type: str = "tarriff_limit") -> list:
+        """
+        Получение списка доступных тариффов
+        :param region: Поиск таррифа в регионе
+        :param tariff_type: Выбор типа тариффа, с лимитом пробега или без
+        :return: Список доступных тариффов
+        """
+        region_tariff: pd.DataFrame = self.excel_data[region][tariff_type]
+        return region_tariff.iloc[:, 0].values.tolist()
+
     def get_available_regions(self) -> list:
         """
         :return: List of available regions
         """
         return [region for region in self.excel_data]
 
+    def get_price_by_options(self, region: str, car_class: str, tariff: str,
+                             tariff_type: str = "tarriff_limit") -> float:
+        """
+        Возвращает цену аренды авто по выбранным параметрам
+        :param region: Выбранный регион
+        :param car_class:  Класс машины
+        :param tariff: Выбранный тарифф
+        :param tariff_type:  Тип тариффа (По названию таблицы)
+        :return:
+        """
+        tariff_table: pd.DataFrame = self.excel_data[region][tariff_type]  # Получаем таблицу с тариффами
+        tariff_index = tariff_table.loc[tariff_table["Tariffs"] == tariff].index[0]  # Получаем индекс строчки
+        # выбранного тариффа
+        class_slice = tariff_table[car_class]  # Срезаем столбец с выбранным классом автомобиля
+        price: str = class_slice[tariff_index]  # Получаем цену среза по индексу тариффа
+        price = price.replace(',', '.').replace(' ', '')  # Убираем пробел и заменяем запятую на точку, чтобы
+        # можно было преобразовать str в float
+
+        return float(price)
+
 
 excel_data_updater_obj = ExcelDataUpdater()
+
+if __name__ == '__main__':
+    from threading import Thread
+
+    Thread(target=excel_data_updater_obj.start_update).start()
+    time.sleep(3)
+    # excel_data_updater_obj.get_available_models(region="Москва", car_class=["EXMR", "PDAR", "FDAR"])
+    # excel_data_updater_obj.get_available_tariffs(region='Москва')
+    excel_data_updater_obj.get_price_by_options(region="Москва", car_class="EDMR", tariff='Сутки')
