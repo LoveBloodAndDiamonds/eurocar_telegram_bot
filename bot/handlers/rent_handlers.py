@@ -2,6 +2,7 @@ import re
 
 from aiogram import types
 from aiogram.fsm.context import FSMContext
+from aiogram3_calendar import SimpleCalendar
 
 from bot.keyboards import (
     get_rent_regions_keyboard,
@@ -9,7 +10,7 @@ from bot.keyboards import (
     get_car_models_keyboard,
     get_rent_tariffs_keyboard,
     get_accept_keyboard,
-    get_phone_number_button
+    get_phone_number_button,
 )
 from bot.models import CarClassification, RentCallback
 from bot.redis_instance import redis
@@ -21,9 +22,20 @@ async def rent_message_handler(message: types.Message, state: FSMContext) -> typ
     """Handle FAQ message."""
     await state.clear()
     await state.set_state(RentAutoState.REGION)
-    return await message.answer('Я задам несколько вопросов, которые помогут подобрать автомобиль для Вас.\n\n'
-                                '<b>Выберите Ваш регион:</b>',
-                                reply_markup=get_rent_regions_keyboard())
+
+    return await message.answer('Выберите дату:',
+                                reply_markup=await SimpleCalendar().start_calendar())
+    # return await message.answer('Я задам несколько вопросов, которые помогут подобрать автомобиль для Вас.\n\n'
+    #                             '<b>Выберите Ваш регион:</b>',
+    #                             reply_markup=get_rent_regions_keyboard())
+
+
+async def process_simple_calendar(callback_query: types.CallbackQuery, callback_data: dict):
+    selected, date = await SimpleCalendar().process_selection(callback_query, callback_data)
+    if selected:
+        await callback_query.message.answer(
+            f'You selected {date.strftime("%d/%m/%Y")}'
+        )
 
 
 async def rent_callback_region(callback_query: types.CallbackQuery, callback_data: RentCallback, state: FSMContext):
@@ -161,7 +173,7 @@ async def confirm_order(callback_query: types.CallbackQuery, callback_data: Rent
     await state.set_state(RentAutoState.PHONE_NUMBER)
     state_data = await state.get_data()
     phone_number = await redis.get(f'{callback_query.from_user.id}')
-    phone_number = phone_number.decode('utf-8').strip()
+    phone_number = phone_number.decode('utf-8').strip() if phone_number else False
     reply_markup = get_phone_number_button(str(phone_number)) if phone_number else None  # Добавляем клавиатуру с
     # прошлым указанным номером, только если он есть
 
@@ -195,7 +207,7 @@ async def handle_phone_number(message: types.Message, state: FSMContext):
 
 
 async def handle_phone_number_callback(callback_query: types.CallbackQuery, state: FSMContext):
-    """Ловим сообщение с номером телефона от юзера."""
+    """Ловим callback с номером телефона от юзера."""
     phone_nubmer = callback_query.data
     phone_regex = re.compile(r'^\+7\d{10}$')
     if phone_regex.match(phone_nubmer):
