@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 
@@ -9,7 +7,7 @@ from bot.keyboards import (
     get_car_models_keyboard,
     get_rent_tariffs_keyboard
 )
-from bot.models import CarClassification, RentCallback, KeyNames, RentCallbackNames
+from bot.models import CarClassification, RentCallback
 from bot.states import RentAutoState
 from bot.utils import excel_data_updater_obj
 
@@ -42,6 +40,12 @@ async def rent_callback_tariff(callback_query: types.CallbackQuery, callback_dat
         await state.clear()  # Очищаем состояние пользователя
         return await callback_query.message.delete()
 
+    if callback_data.answer_data == "back":  # Возвращаем пользователя на выбор региона
+        await state.set_state(RentAutoState.REGION)
+        return await callback_query.message.edit_text('Я задам несколько вопросов, которые помогут подобрать автомобиль'
+                                                   ' для Вас.\n\n<b>Выберите Ваш регион:</b>',
+                                                   reply_markup=get_rent_regions_keyboard())
+
     await state.update_data(TARIFF=callback_data.answer_data)
     await state.set_state(RentAutoState.CAR_CLASS)
     state_data = await state.get_data()
@@ -61,6 +65,12 @@ async def rent_callback_car_class(callback_query: types.CallbackQuery, callback_
     if callback_data.answer_data == "cancel":  # Если пользователь нажал кнопку "Отмена"
         await state.clear()  # Очищаем состояние пользователя
         return await callback_query.message.delete()
+
+    if callback_data.answer_data == "back":  # Возвращаем пользователя на выбор тариффа
+        state_data = await state.get_data()
+        await state.set_state(RentAutoState.TARIFF)
+        return callback_query.message.edit_text(f"Отлично, теперь выберите тариф:",
+                                                reply_markup=get_rent_tariffs_keyboard(region=state_data['REGION']))
 
     data: CarClassification.value = eval(f"{callback_data.answer_data}.value")  # Возможно, это колхозинг, но мне
     # показалось, что это достаточно удобный способ для получения классификации машин, которые входят
@@ -82,6 +92,18 @@ async def rent_callback_car_model(callback_query: types.CallbackQuery, callback_
     if callback_data.answer_data == "cancel":  # Если пользователь нажал кнопку "Отмена"
         await state.clear()  # Очищаем состояние пользователя
         return await callback_query.message.delete()
+
+    if callback_data.answer_data == "back":  # Возвращаем пользователя на выбор класса авто
+        state_data = await state.get_data()
+        await state.set_state(RentAutoState.CAR_CLASS)
+        cars_class_description = ""
+        for classification in CarClassification:
+            v = classification.value
+            cars_class_description += f"<b>{v[3]} {v[1]}</b>: {v[2]}\n\n"
+        return callback_query.message.edit_text(
+            f"Отлично, теперь выберите класс автомобиля:\n\n{classification}",
+            reply_markup=get_rent_car_classification_keyboard(region=state_data['REGION'],
+                                                              tariff=state_data['TARIFF']))
 
     callback_data: tuple = eval(str(callback_data.answer_data))  # ('Nissan Qashqai', 'IGAR', 'AT')
     await state.update_data(CAR_MODEL=callback_data)

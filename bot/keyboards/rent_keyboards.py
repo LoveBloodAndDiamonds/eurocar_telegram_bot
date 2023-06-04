@@ -7,8 +7,11 @@ from bot.utils import excel_data_updater_obj
 
 
 def construct(builder: InlineKeyboardBuilder, adjust: int or bool = 1, resize_keyboard: bool = True,
-              add_cancel_key: bool = True) -> InlineKeyboardMarkup:
+              add_cancel_key: bool = True, add_back_key: bool = True) -> InlineKeyboardMarkup:
     """Remove some lines by this func."""
+    if add_back_key:  # Add cancel key
+        builder.button(text=KeyNames.BACK_KEY,
+                       callback_data=RentCallback(current_answer='None', answer_data='back'))
     if add_cancel_key:  # Add cancel key
         builder.button(text=KeyNames.CANCEL_KEY,
                        callback_data=RentCallback(current_answer='None', answer_data='cancel'))
@@ -22,7 +25,7 @@ def get_rent_regions_keyboard() -> InlineKeyboardMarkup:
     for region in excel_data_updater_obj.get_available_regions():
         builder.button(text=str(region),
                        callback_data=RentCallback(current_answer=RentCallbackNames.REGION, answer_data=str(region)))
-    return construct(builder)
+    return construct(builder, add_back_key=False)
 
 
 def get_rent_car_classification_keyboard(region: str, tariff: str) -> InlineKeyboardMarkup:
