@@ -152,7 +152,18 @@ class ExcelDataUpdater:
         :return:
         """
         tariff_table: pd.DataFrame = self.excel_data[region][tariff_type]  # Получаем таблицу с тариффами
-        tariff_index = tariff_table.loc[tariff_table["Tariffs"] == tariff].index[0]  # Получаем индекс строчки
+        tariff_table_dict = tariff_table.to_dict()["Tariffs"]
+        for t in tariff_table_dict:
+            tariff_index = t
+            tariff_range: list = eval(tariff_table_dict[t])  # Преобразуем строку в список
+            tariff_range_min = min(tariff_range)
+            tariff_range_max = max(tariff_range)
+
+            if tariff_range_min <= tariff <= tariff_range_max:
+                break
+        else:
+            raise Exception('Wrong tariff!')
+        # tariff_index = tariff_table.loc[tariff_table["Tariffs"] == tariff].index[0]  # Получаем индекс строчки
         # выбранного тариффа
         class_slice = tariff_table[car_class]  # Срезаем столбец с выбранным классом автомобиля
         price: str = class_slice[tariff_index]  # Получаем цену среза по индексу тариффа

@@ -45,7 +45,7 @@ def get_rent_regions_keyboard() -> InlineKeyboardMarkup:
     return construct(builder, add_back_key=False)
 
 
-def get_rent_car_classification_keyboard(region: str, tariff: str) -> InlineKeyboardMarkup:
+def get_rent_car_classification_keyboard(region: str, tariff: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for classification in CarClassification:
         values = classification.value
@@ -58,16 +58,6 @@ def get_rent_car_classification_keyboard(region: str, tariff: str) -> InlineKeyb
         builder.button(text=str(values[3]) + " " + str(values[1]) + " " + prices_label,
                        callback_data=RentCallback(current_answer=RentCallbackNames.CAR_CLASS,
                                                   answer_data=str(classification)))
-    return construct(builder)
-
-
-def get_rent_tariffs_keyboard(region: str) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    available_tariffs = excel_data_updater_obj.get_available_tariffs(region=region)
-    for tariff in available_tariffs:
-        builder.button(text=str(tariff),
-                       callback_data=RentCallback(current_answer=RentCallbackNames.TARIFF,
-                                                  answer_data=str(tariff)))
     return construct(builder)
 
 

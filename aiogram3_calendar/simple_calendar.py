@@ -5,6 +5,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import CallbackQuery
 from aiogram3_calendar.calendar_types import SimpleCalendarCallback, SimpleCalendarAction, WEEKDAYS
+from bot.models import KeyNames, RentCallback
 
 
 async def replace_month_name(month_name: str) -> str:
@@ -114,6 +115,16 @@ class SimpleCalendar:
                         month=month,
                         day=day).pack()
                 )
+            ]
+        )
+
+        # Very last row
+        markup.append(
+            [
+                InlineKeyboardButton(text=KeyNames.BACK_KEY,
+                                     callback_data=RentCallback(current_answer='None', answer_data='back').pack()),
+                InlineKeyboardButton(text=KeyNames.CLOSE_KEY,
+                                     callback_data=RentCallback(current_answer='None', answer_data='cancel').pack())
             ]
         )
 

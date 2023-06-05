@@ -6,7 +6,9 @@ class RentAutoState(StatesGroup):
     Класс состояний пользователя при подборе авто.
     """
     REGION = State()
-    TARIFF = State()
+    START_DATE = State()
+    END_DATE = State()
+    RENT_DAYS = State()
     CAR_CLASS = State()
     CAR_MODEL = State()
     CONFIRM_ORDER = State()

@@ -24,7 +24,7 @@ async def set_up_commands(bot: Bot) -> None:
 
 
 async def main() -> None:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logging.info('Bot launched!')
 
     data_updater_th.start()  # Start to update data from excel table
