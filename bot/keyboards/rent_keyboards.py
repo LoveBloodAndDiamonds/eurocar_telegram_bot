@@ -32,14 +32,7 @@ def construct(builder: InlineKeyboardBuilder, adjust: int or bool = 1, resize_ke
 
 def get_rent_regions_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    # lst = [[i + j for j in range(1, 6)] for i in range(0, 26, 5)]
-    # print(lst)
-    # for range_list in lst:
-    #     for r in range_list:
-    #         builder.button(text=str(r), callback_data=str(r))
-    #     builder.adjust(5)
-    # return builder.as_markup()
-    for region in excel_data_updater_obj.get_available_regions():  # todo
+    for region in excel_data_updater_obj.get_available_regions():
         builder.button(text=str(region),
                        callback_data=RentCallback(current_answer=RentCallbackNames.REGION, answer_data=str(region)))
     return construct(builder, add_back_key=False)

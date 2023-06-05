@@ -4,10 +4,7 @@ import time
 
 import gspread
 import pandas as pd
-from dotenv import load_dotenv
 from oauth2client.service_account import ServiceAccountCredentials
-
-load_dotenv()
 
 
 class ExcelDataUpdater:
@@ -104,7 +101,6 @@ class ExcelDataUpdater:
         :return: Список доступных машин для выбранного региона и класса авто. El: (car_model, spec, transmission,)
         """
         region_available_cars: pd.DataFrame = self.excel_data[region]['available_cars']
-
         # Выбор строки с нужным аффилированным брендом
         result = region_available_cars.loc[region_available_cars['Аffiliated brand'] == affiliated_brand]
 

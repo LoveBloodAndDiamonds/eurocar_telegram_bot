@@ -14,7 +14,8 @@ def construct(builder: InlineKeyboardBuilder, adjust: int or bool = 1, resize_ke
 def get_faq_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     btns = [
-        ('Какие бывают виды аренды?', FaqCallback(answer='rent_types'),),
+        ('Какие бывают типы аренды?', FaqCallback(answer='rent_types'),),
+        ('Какие бывают виды аренды', FaqCallback(answer='rent_view')),
         ('Какие документы нужны для аренды?', FaqCallback(answer='documents')),
         ('Могут ли мне отказать в аренде?', FaqCallback(answer='rent_decline')),
         ('Как работает страховка?', FaqCallback(answer='insurance')),
