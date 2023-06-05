@@ -1,8 +1,10 @@
 import os
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import aiosmtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+
+from bot.utils import excel_data_updater_obj
 
 
 async def send_email(data: dict) -> None:
@@ -19,10 +21,22 @@ async def send_email(data: dict) -> None:
     # Создание сообщения
     msg = MIMEMultipart()
     msg['From'] = 'rentbotcar@gmail.com'
-    msg['To'] = 'ayaz2000@mail.ru'
+    msg['To'] = excel_data_updater_obj.get_region_email(region=data['REGION'])
     msg['Subject'] = 'Заявка на аренду!'
 
-    body = str(data)
+    # Создание текста сообщения
+    body = f"""
+    Регион:                 {data['REGION']}
+    Имя пользователя:       {data['USER_NAME']}
+    Номер телефона:         {data['PHONE']}
+    Дата начала аренды:     {data['START_DATE']}
+    Дата окончания аренды:  {data['END_DATE']}
+    Кол-во дней аренды:     {data['RENT_DAYS']}
+    Класс авто:             {data['CAR_CLASS'][1]}
+    Модель авто:            {data['CAR_MODEL']}
+    Стоимость аренды:       {data['RENT_PRICE']} rub.
+    
+    """
     msg.attach(MIMEText(body, 'plain'))
 
     # Отправка сообщения
@@ -31,7 +45,9 @@ async def send_email(data: dict) -> None:
     # Закрытие соединения с почтовым сервером
     await smtp.quit()
 
+
 if __name__ == '__main__':
     import asyncio
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_email())

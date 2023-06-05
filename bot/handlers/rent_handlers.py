@@ -23,6 +23,8 @@ from bot.utils import excel_data_updater_obj, generate_preview_text, send_email
 
 async def rent_message_handler(message: types.Message, state: FSMContext) -> types.Message:
     """Handle FAQ message."""
+    excel_data_updater_obj.get_region_email("Москва")
+
     await state.clear()  # Очищаем состояние, чтобы пользователь не запутался
     user_real_name = await redis.get(f"{message.from_user.id}name")
     user_real_name = user_real_name.decode('utf-8').strip() if user_real_name else False
@@ -112,8 +114,6 @@ async def get_end_date_from_calendar(callback_query: types.CallbackQuery, callba
             start_date = datetime.fromisoformat(state_data["START_DATE"])
             end_date = datetime.fromisoformat(state_data["END_DATE"])
             days_delta = (end_date - start_date).days
-            print('--')
-            print(type(days_delta))
             days_delta = 1 if not days_delta else days_delta  # if start date == end date
             await state.update_data(RENT_DAYS=days_delta)
 
@@ -126,8 +126,8 @@ async def get_end_date_from_calendar(callback_query: types.CallbackQuery, callba
 
             return callback_query.message.edit_text(
                 f"{generate_preview_text(state_data)}"
-                f"<b>Выберите класс автомобиля:</b>\n"
-                f"<i>В скобках указана стоимость аренды за 1 сутки</i>",
+                f"<b>Выберите класс автомобиля:</b>\n\n"
+                f"<i>В скобках указана предположительная стоимость аренды за выбранный Вами период аренды.</i>",
                 reply_markup=get_rent_car_classification_keyboard(region=state_data['REGION'],
                                                                   tariff=days_delta))
         else:

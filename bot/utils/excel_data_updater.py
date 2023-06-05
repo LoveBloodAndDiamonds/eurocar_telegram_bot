@@ -64,6 +64,7 @@ class ExcelDataUpdater:
                     ("tarriff_limit", "<tariff_limit>", "</tariff_limit>"),
                     ("tariff_unlimit", "<tariff_unlimit>", "</tariff_unlimit>"),
                     ("available_cars", "<available_cars>", "</available_cars>"),
+                    ("email", "<email>", "</email>")
                 ]
 
                 for values in find_values:
@@ -167,6 +168,15 @@ class ExcelDataUpdater:
         # можно было преобразовать str в float
 
         return float(price) * tariff
+
+    def get_region_email(self, region: str) -> str:
+        """
+        Returns region email
+        :param region: Region name
+        :return: region email
+        """
+        email: pd.DataFrame = self.excel_data[region]["email"]
+        return email.columns.tolist()[0]
 
 
 excel_data_updater_obj = ExcelDataUpdater()
