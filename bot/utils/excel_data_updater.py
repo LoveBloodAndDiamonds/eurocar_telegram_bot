@@ -137,7 +137,7 @@ class ExcelDataUpdater:
         """
         return [region for region in self.excel_data]
 
-    def get_price_by_options(self, region: str, car_class: str, tariff: str,
+    def get_price_by_options(self, region: str, car_class: str, tariff: int,
                              tariff_type: str = "tarriff_limit") -> float:
         """
         Возвращает цену аренды авто по выбранным параметрам
@@ -166,7 +166,7 @@ class ExcelDataUpdater:
         price = price.replace(',', '.').replace(' ', '')  # Убираем пробел и заменяем запятую на точку, чтобы
         # можно было преобразовать str в float
 
-        return float(price)
+        return float(price) * tariff
 
 
 excel_data_updater_obj = ExcelDataUpdater()

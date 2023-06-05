@@ -1,9 +1,8 @@
-import re
+# import re
 from datetime import datetime
 
 from aiogram import types
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State
 
 from aiogram3_calendar import SimpleCalendar
 from bot.keyboards import (
@@ -11,7 +10,7 @@ from bot.keyboards import (
     get_rent_car_classification_keyboard,
     get_car_models_keyboard,
     get_accept_keyboard,
-    get_phone_number_button,
+    # get_phone_number_button,
 )
 from bot.models import CarClassification, RentCallback, TextNames as Tn
 from bot.redis_instance import redis
@@ -19,13 +18,34 @@ from bot.states import RentAutoState
 from bot.utils import excel_data_updater_obj, generate_preview_text, send_email
 
 
+# from aiogram.fsm.state import State
+
+
 async def rent_message_handler(message: types.Message, state: FSMContext) -> types.Message:
     """Handle FAQ message."""
     await state.clear()  # Очищаем состояние, чтобы пользователь не запутался
-    await state.set_state(RentAutoState.REGION)
-
-    return await message.answer('<b>Выберите Ваш регион:</b>',
-                                reply_markup=get_rent_regions_keyboard())
+    user_real_name = await redis.get(f"{message.from_user.id}name")
+    user_real_name = user_real_name.decode('utf-8').strip() if user_real_name else False
+    phone_number = await redis.get(f'{message.from_user.id}phone')
+    phone_number = phone_number.decode('utf-8').strip() if phone_number else False
+    if user_real_name and phone_number:
+        await state.set_state(RentAutoState.REGION)
+        return await message.answer(f'<b>{user_real_name}</b>, я задам Вам несколько вопросов, чтобы помочь оформить '
+                                    f'заявку на аренду автомобиля.\n\n'
+                                    '<b>Выберите Ваш регион:</b>',
+                                    reply_markup=get_rent_regions_keyboard())
+    elif user_real_name and not phone_number:
+        return await message.answer("Перед тем, как я помогу Вам оформить заявку на аренду автомобиля, Вам "
+                                    "необходимо подсказать мне Ваш номер телефона для связи с менеджером.\n"
+                                    "Введите команду /phone для уточнения деталей")
+    elif not user_real_name and phone_number:
+        return await message.answer("Перед тем, как я помогу Вам оформить заявку на аренду автомобиля, Вам "
+                                    "необходимо подсказать мне Ваше имя.\n"
+                                    "Введите команду /name для уточнения деталей")
+    elif not user_real_name and not phone_number:
+        return await message.answer("Перед тем, как я помогу Вам оформить заявку на аренду автомобиля, Вам "
+                                    "необходимо подсказать мне Ваше имя и номер телефона для связи с менеджером.\n"
+                                    "Введите команды /name и /phone для уточнения деталей.")
 
 
 async def rent_callback_region(callback_query: types.CallbackQuery, callback_data: RentCallback, state: FSMContext):
@@ -92,6 +112,8 @@ async def get_end_date_from_calendar(callback_query: types.CallbackQuery, callba
             start_date = datetime.fromisoformat(state_data["START_DATE"])
             end_date = datetime.fromisoformat(state_data["END_DATE"])
             days_delta = (end_date - start_date).days
+            print('--')
+            print(type(days_delta))
             days_delta = 1 if not days_delta else days_delta  # if start date == end date
             await state.update_data(RENT_DAYS=days_delta)
 
@@ -233,60 +255,72 @@ async def confirm_order(callback_query: types.CallbackQuery, callback_data: Rent
     rent_price = int(excel_data_updater_obj.get_price_by_options(region=state_data['REGION'],
                                                                  car_class=state_data['CAR_MODEL'][1],
                                                                  tariff=state_data['RENT_DAYS']))
-    await state.update_data(CONFIRM_ORDER=rent_price)
-    await state.set_state(RentAutoState.PHONE_NUMBER)
-    state_data = await state.get_data()
-    phone_number = await redis.get(f'{callback_query.from_user.id}')
-    phone_number = phone_number.decode('utf-8').strip() if phone_number else False
-    reply_markup = get_phone_number_button(str(phone_number)) if phone_number else None  # Добавляем клавиатуру с
+    # await state.update_data(CONFIRM_ORDER=rent_price)
+    # await state.set_state(RentAutoState.PHONE_NUMBER)
+    # reply_markup = get_phone_number_button(str(phone_number)) if phone_number else None  # Добавляем клавиатуру с
     # прошлым указанным номером, только если он есть
 
-    prev_text = generate_preview_text(state_data,
-                                      additional_text=f"{Tn.T.format(int(rent_price * state_data['RENT_DAYS']))}")
+    state_data = await state.get_data()
+    await state.clear()  # ADD AFTER REWORK
 
+    phone_number = await redis.get(f"{callback_query.from_user.id}phone")
+    phone_number = phone_number.decode('utf-8').strip()
+    user_name = await redis.get(f"{callback_query.from_user.id}name")
+    user_name = user_name.decode('utf-8').strip()
+
+    state_data["RENT_PRICE"] = rent_price
+    state_data["USER_NAME"] = user_name
+    state_data["PHONE"] = phone_number
+    await send_email(data=state_data)
+
+    prev_text = generate_preview_text(state_data, additional_text=f"{Tn.T.format(rent_price)}")
     return await callback_query.message.edit_text(text=f"{prev_text}"
-                                                       f"✅<b> Вы подтвердили заказ</b>\n"
-                                                       f"В следующем сообщении <b>введите номер телефона</b> в формате "
-                                                       f"<b>+7</b>, на который Вам перезвонит менеджер, для "
-                                                       f"уточнения дальнейших инструкций: ",
-                                                  reply_markup=reply_markup)
+                                                       f"✅<b> Вы подтвердили заявку!</b>\n\n"
+                                                       f"<b>{user_name}</b>, в ближайшее время менеджер свяжется с "
+                                                       f"Вами по номеру телефона <code>{phone_number}</code>.")
+
+    # return await callback_query.message.edit_text(text=f"{prev_text}"
+    #                                                    f"✅<b> Вы подтвердили заказ</b>\n"
+    #                                                    f"В следующем сообщении <b>введите номер телефона</b> в формате "
+    #                                                    f"<b>+7</b>, на который Вам перезвонит менеджер, для "
+    #                                                    f"уточнения дальнейших инструкций: ",
+    #                                               reply_markup=reply_markup)
+
+# async def handle_phone_number(message: types.Message, state: FSMContext):
+#     """Ловим сообщение с номером телефона от юзера."""
+#     phone_nubmer = message.text
+#     phone_regex = re.compile(r'^\+7\d{10}$')
+#     if phone_regex.match(phone_nubmer):
+#         await redis.set(f"{message.from_user.id}phone", phone_nubmer)
+#         await state.update_data(PHONE_NUMBER=phone_nubmer)
+#         state_data = await state.get_data()
+#         await state.clear()
+#         await send_email(state_data)
+#         return await message.answer(f'Ваш номер телефона <code>{phone_nubmer}</code>, менеджер свяжется с Вами в '
+#                                     f'ближайшее время.')
+#     else:
+#         return await message.answer(f'Вы ввели неправильный номер телефона, попробуйте еще раз:')
 
 
-async def handle_phone_number(message: types.Message, state: FSMContext):
-    """Ловим сообщение с номером телефона от юзера."""
-    phone_nubmer = message.text
-    phone_regex = re.compile(r'^\+7\d{10}$')
-    if phone_regex.match(phone_nubmer):
-        await redis.set(message.from_user.id, phone_nubmer)
-        await state.update_data(PHONE_NUMBER=phone_nubmer)
-        state_data = await state.get_data()
-        await state.clear()
-        await send_email(state_data)
-        return await message.answer(f'Ваш номер телефона <code>{phone_nubmer}</code>, менеджер свяжется с Вами в '
-                                    f'ближайшее время.')
-    else:
-        return await message.answer(f'Вы ввели неправильный номер телефона, попробуйте еще раз:')
-
-
-async def handle_phone_number_callback(callback_query: types.CallbackQuery, state: FSMContext):
-    """Ловим callback с номером телефона от юзера."""
-    phone_nubmer = callback_query.data
-    phone_regex = re.compile(r'^\+7\d{10}$')
-    if phone_regex.match(phone_nubmer):
-        await state.update_data(PHONE_NUMBER=phone_nubmer)
-        state_data = await state.get_data()
-        await state.clear()
-        await send_email(state_data)
-
-        additional_text = f"{Tn.T.format(int(state_data['CONFIRM_ORDER'] * state_data['RENT_DAYS']))}"
-        prev_text = generate_preview_text(state_data, additional_text=additional_text)
-
-        await callback_query.message.edit_text(text=f"{prev_text}"
-                                                    f"✅<b> Вы подтвердили заказ</b>\n")
-        return await callback_query.message.answer(f'Ваш номер телефона <code>{phone_nubmer}</code>,'
-                                                   f' менеджер свяжется с Вами в ближайшее время.')
-    else:
-        return await callback_query.message.answer(f'Вы ввели неправильный номер телефона, попробуйте еще раз:')
+# async def handle_phone_number_callback(callback_query: types.CallbackQuery, state: FSMContext):
+#     """Ловим callback с номером телефона от юзера."""
+#     phone_number = callback_query.data
+#     phone_regex = re.compile(r'^\+7\d{10}$')
+#     if phone_regex.match(phone_number):
+#         await state.update_data(PHONE_NUMBER=phone_number)
+#         state_data = await state.get_data()
+#         await state.clear()
+#         await send_email(state_data)
+#
+#         additional_text = f"{Tn.T.format(int(state_data['CONFIRM_ORDER'] * state_data['RENT_DAYS']))}"
+#         prev_text = generate_preview_text(state_data, additional_text=additional_text)
+#
+#         await callback_query.message.edit_text(text=f"{prev_text}"
+#                                                     f"✅<b> Вы подтвердили заказ</b>\n")
+#         return await callback_query.message.answer(f'Ваш номер телефона <code>{phone_number}</code>,'
+#                                                    f' менеджер свяжется с Вами в ближайшее время.')
+#     else:
+#         return await callback_query.message.answer(f'Вы ввели неправильный номер телефона, попробуйте еще раз:')
 
 # async def rent_callback_tariff(callback_query: types.CallbackQuery, callback_data: RentCallback, state: FSMContext):
 #     """Выбор тарифа."""

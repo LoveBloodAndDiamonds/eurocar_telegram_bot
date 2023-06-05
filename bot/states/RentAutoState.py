@@ -5,6 +5,7 @@ class RentAutoState(StatesGroup):
     """
     Класс состояний пользователя при подборе авто.
     """
+    USER_REAL_NAME = State()
     REGION = State()
     START_DATE = State()
     END_DATE = State()
