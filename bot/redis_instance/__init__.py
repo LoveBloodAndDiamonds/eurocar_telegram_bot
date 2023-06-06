@@ -1,3 +1,3 @@
 __all__ = ['redis']
 
-from .redis_instance import redis
+from bot.redis_instance.redis_instance import redis

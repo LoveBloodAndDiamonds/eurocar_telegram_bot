@@ -24,9 +24,6 @@ async def set_up_commands(bot: Bot) -> None:
 
 
 async def main() -> None:
-    logging.basicConfig(level=logging.DEBUG)
-    logging.info('Bot launched!')
-
     data_updater_th.start()  # Start to update data from excel table
 
     dp = Dispatcher(storage=RedisStorage(redis=redis))
@@ -42,6 +39,8 @@ async def main() -> None:
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.info('Bot launched!')
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logging.info('Bot stopped')
