@@ -7,10 +7,10 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-from redis_instance import redis
-from commands import register_user_commands, bot_commands
-from handlers import register_user_handlers
-from utils import data_updater_th
+from bot.redis_instance import redis
+from bot.commands import register_user_commands, bot_commands
+from bot.handlers import register_user_handlers
+from bot.utils import data_updater_th
 
 load_dotenv()
 
