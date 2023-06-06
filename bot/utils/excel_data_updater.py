@@ -9,7 +9,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 class ExcelDataUpdater:
     def __init__(self):
-        self.json_file = '../sheets_google_credentials.json'  # Путь к вашему файлу json с данными аутентификации
+        self.json_file = 'eurocar_telegram_bot/sheets_google_credentials.json'  # Путь к вашему файлу json с данными аутентификации
         # self.json_file = "sheets_google_credentials.json"
         self.file_id = os.getenv('GOOGLE_SHEETS_ID')  # Указываем айди документа на sheets.google.com
         self.scope = ['https://spreadsheets.google.com/feeds',  # Устанавливаем права доступа
