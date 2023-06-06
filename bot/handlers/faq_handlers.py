@@ -18,5 +18,5 @@ async def faq_callback_handler(callback_query: types.CallbackQuery, callback_dat
     if callback_data.answer == 'close':
         return await callback_query.message.delete()
     else:
-        with open(f"templates/faq/{callback_data.answer}.txt", "r") as file:
+        with open(f"bot/templates/faq/{callback_data.answer}.txt", "r") as file:
             return await callback_query.message.edit_text(text=file.read(), reply_markup=get_back_key())
