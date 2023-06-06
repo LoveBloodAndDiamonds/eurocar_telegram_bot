@@ -186,7 +186,8 @@ async def rent_callback_car_class(callback_query: types.CallbackQuery, callback_
     car_models = excel_data_updater_obj.get_available_models(region=state_data["REGION"], car_class=data[0])
     return callback_query.message.edit_text(f"{generate_preview_text(state_data)}"
                                             f"<b>Выберите модель авто:</b>\n\n"
-                                            f"<i>В скобках указана стоимость аренды за 1 сутки</i>",
+                                            f"<i>В скобках указана предположительная стоимость аренды за "
+                                            f"выбранный Вами период аренды.</i>",
                                             reply_markup=get_car_models_keyboard(
                                                 region=state_data['REGION'],
                                                 car_models=car_models,
