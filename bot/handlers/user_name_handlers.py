@@ -14,7 +14,7 @@ async def user_name_handler(message: types.Message, state: FSMContext):
     await state.set_state(RentAutoState.PHONE_NUMBER)
 
     phone_number = await redis.get(f"{message.from_user.id}phone")
-    phone_number = phone_number.decode('utf-8').strip()
+    phone_number = phone_number.decode('utf-8').strip() if phone_number else None
     keyboard = get_phone_number_button(phone_number) if phone_number else None
 
     return await message.answer(f"<b>{state_data['USER_REAL_NAME']}</b>, в следующем сообщении "
@@ -29,7 +29,7 @@ async def user_name_callback_handler(callback_querry: types.CallbackQuery, state
     await state.set_state(RentAutoState.PHONE_NUMBER)
 
     phone_number = await redis.get(f"{callback_querry.from_user.id}phone")
-    phone_number = phone_number.decode('utf-8').strip()
+    phone_number = phone_number.decode('utf-8').strip() if phone_number else None
     keyboard = get_phone_number_button(phone_number) if phone_number else None
 
     return await callback_querry.message.edit_text(prev_text +

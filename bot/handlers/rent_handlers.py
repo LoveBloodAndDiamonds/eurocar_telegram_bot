@@ -235,7 +235,7 @@ async def confirm_order(callback_query: types.CallbackQuery, callback_data: Rent
     await state.set_state(RentAutoState.USER_REAL_NAME)
 
     user_name = await redis.get(f"{callback_query.from_user.id}name")
-    user_name = user_name.decode('utf-8').strip()
+    user_name = user_name.decode('utf-8').strip() if user_name else None
     reply_markup = get_user_real_name_button(str(user_name)) if user_name else None  # Добавляем клавиатуру с
     # прошлым указанным именем, если оно есть
 
