@@ -1,8 +1,17 @@
 # eurocar_telegram_bot
+A bot for company "Europcar", that helps users create and send car rental requests.
 
-<h2>Установить python3.11</h2>
-<h2>Установить poetry</h2>
-<h2>Установить пакеты из poetry (poetry update)</h2>
-<h2>Заполнить .env</h2>
-<h2>Заполнить sheets_google_creditionals.json</h2>
-<h2>poetry run python3 -m bot</h2>
+
+## How to deploy:
+- fill .sheets_google_credentions.json
+- fill .env
+
+<h4>deploy with poetry:</h4>
+- create poetry env
+- poetry update
+- install redis
+- run redis server
+- poetry run python3 -m bot
+
+<h4>deploy with docker:</h4>
+- docker-compose up -d
