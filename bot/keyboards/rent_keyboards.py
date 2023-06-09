@@ -82,7 +82,14 @@ def get_accept_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def get_user_real_name_button(user_name: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=f"Использовать {user_name}", callback_data=user_name)
+    return builder.as_markup()
+
+
 def get_phone_number_button(phone_number: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=f"Использовать {phone_number}", callback_data=phone_number)
     return builder.as_markup()
+

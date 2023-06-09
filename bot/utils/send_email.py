@@ -27,8 +27,8 @@ async def send_email(data: dict) -> None:
     # Создание текста сообщения
     body = f"""
     Регион:                 {data['REGION']}
-    Имя пользователя:       {data['USER_NAME']}
-    Номер телефона:         {data['PHONE']}
+    Имя пользователя:       {data['USER_REAL_NAME']}
+    Номер телефона:         {data['PHONE_NUMBER']}
     Дата начала аренды:     {data['START_DATE']}
     Дата окончания аренды:  {data['END_DATE']}
     Кол-во дней аренды:     {data['RENT_DAYS']}
@@ -44,10 +44,3 @@ async def send_email(data: dict) -> None:
 
     # Закрытие соединения с почтовым сервером
     await smtp.quit()
-
-
-if __name__ == '__main__':
-    import asyncio
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(send_email())

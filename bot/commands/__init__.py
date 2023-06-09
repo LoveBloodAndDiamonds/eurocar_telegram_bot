@@ -15,8 +15,8 @@ bot_commands = (
     ("help", "Помощь и справка"),
     ("contacts", "Показать контакты"),
     ("show_menu", "Показать меню"),
-    ("phone", "Поменять номер телефона"),
-    ("name", "Поменять имя")
+    # ("phone", "Поменять номер телефона"),
+    # ("name", "Поменять имя")
 )
 
 
@@ -26,6 +26,6 @@ def register_user_commands(router: Router) -> None:
     router.message.register(help_command, Command(commands='help'))
     router.message.register(contacts_command, Command(commands='contacts'))
     router.message.register(show_menu_command, Command(commands='show_menu'))
-    router.message.register(change_name_command, Command(commands='name'))
-    router.message.register(change_phone_command, Command(commands='phone'))
+    # router.message.register(change_name_command, Command(commands='name'))
+    # router.message.register(change_phone_command, Command(commands='phone'))
 

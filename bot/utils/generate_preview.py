@@ -25,5 +25,7 @@ def generate_preview_text(state_data: dict, additional_text: str = '', ignore: l
                 text += Tn.C.format(state_data[key][1])
             case "CAR_MODEL":
                 text += Tn.M.format(state_data[key][0])
+            case "RENT_PRICE":
+                text += Tn.T.format(state_data[key])
 
     return text + additional_text + '\n'

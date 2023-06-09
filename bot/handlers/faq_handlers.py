@@ -4,9 +4,12 @@ from bot.keyboards import get_faq_keyboard, get_back_key
 from bot.models import FaqCallback
 
 
-async def faq_message_handler(message: types.Message) -> types.Message:
+async def faq_message_handler(message: types.Message or types.CallbackQuery) -> types.Message:
     """Handle FAQ message."""
-    return await message.answer('Выберите интересующий Вас вопрос:', reply_markup=get_faq_keyboard())
+    if isinstance(message, types.Message):
+        return await message.answer('Выберите интересующий Вас вопрос:', reply_markup=get_faq_keyboard())
+    if isinstance(message, types.CallbackQuery):
+        return await message.message.answer('Выберите интересующий Вас вопрос:', reply_markup=get_faq_keyboard())
 
 
 async def faq_callback_handler(callback_query: types.CallbackQuery, callback_data: FaqCallback
