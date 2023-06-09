@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from bot.redis_instance import redis
 from bot.utils import generate_preview_text, send_email
+from bot.keyboards import get_main_reply_markup
 
 
 async def phone_number_handler(message: types.Message, state: FSMContext):
@@ -21,7 +22,9 @@ async def phone_number_handler(message: types.Message, state: FSMContext):
         return await message.answer(
             "✅<b> Вы подтвердили заказ!</b>\n"
             f"<b>{state_data['USER_REAL_NAME'].capitalize()}</b>, менеджер свяжется с Вами в ближайшее время "
-            f"по телефону <code>{message.text}</code>.")
+            f"по телефону <code>{message.text}</code>.\n"
+            f"Используйте клавиатуру, чтобы оформить новый заказ:",
+            reply_markup=get_main_reply_markup())
     else:
         return await message.answer("Вы ввели неправильный номер телефона, номер телефона может быть в формате "
                                     "<code>+79</code>.")
@@ -37,4 +40,6 @@ async def phone_number_callback_handler(callback_querry: types.CallbackQuery, st
     await callback_querry.message.edit_text(text=prev_text + "✅<b> Вы подтвердили заказ</b>")
     return await callback_querry.message.answer(f"<b>{state_data['USER_REAL_NAME'].capitalize()}</b>, менеджер свяжется "
                                                 f"с Вами в ближайшее время по телефону "
-                                                f"<code>{callback_querry.data}</code>")
+                                                f"<code>{callback_querry.data}</code>.\n"
+                                                f"Используйте клавиатуру, чтобы оформить новый заказ:",
+                                                reply_markup=get_main_reply_markup())
