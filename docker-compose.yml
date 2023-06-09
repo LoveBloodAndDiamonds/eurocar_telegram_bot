@@ -8,7 +8,7 @@ services:
       - ./.env
     restart: on-failure
     ports:
-      - "6379:6379"
+      - "6378:6378"
   bot:
     build: .
     command: sh -c "python3 -m bot"
